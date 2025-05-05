@@ -48,7 +48,7 @@ def wib():
     return datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M WIB")
 
 def run(playwright: Playwright) -> int:
-    sites = baca_file_list("multi.txt")
+    sites = baca_file_list("site.txt")
     pw_env = os.getenv("pw")
     ada_error = False
 
@@ -56,11 +56,12 @@ def run(playwright: Playwright) -> int:
         try:
             site, userid_site, *_ = entry.split(':')
             full_url = f"https://{site}/lite"
-            print(f"🌐 Membuka browser untuk {site}...")
 
+            print(f"🌐 Membuka browser untuk {site}...")
             browser = playwright.chromium.launch(headless=True)
             context = browser.new_context(**playwright.devices["Pixel 7"])
             page = context.new_page()
+
             page.goto(full_url, timeout=60000)
 
             if not userid_site or not pw_env:
@@ -70,18 +71,12 @@ def run(playwright: Playwright) -> int:
             page.locator("#entered_password").fill(pw_env)
             page.get_by_role("button", name="Login").click()
             time.sleep(1)
+            page.get_by_role("link", name="Transaction").click()
+            print(f"🔎 Mengecek saldo dan riwayat kemenangan di {site}...")
+            time.sleep(1)
+            page.wait_for_selector("table.history tbody#transaction", timeout=30000)
 
-            # Penanganan khusus untuk wdbos80993.com
-            if "wdbos80993.com" in site:
-                page.get_by_role("link", name="Transaction").click()
-                time.sleep(1)
-                page.wait_for_selector("table.history tbody#transaction", timeout=30000)
-                rows = page.locator("table.history tbody#transaction tr").all()
-            else:
-                page.get_by_role("link", name="Transaction").click()
-                time.sleep(1)
-                page.wait_for_selector("table.history tbody#transaction", timeout=30000)
-                rows = page.locator("table.history tbody#transaction tr").all()
+            rows = page.locator("table.history tbody#transaction tr").all()
 
             if not rows:
                 print(f"Tabel kosong di {site}")
@@ -91,7 +86,7 @@ def run(playwright: Playwright) -> int:
             cols = first_row.locator("td").all()
 
             if len(cols) >= 5:
-                raw_saldo = cols[4].inner_text().strip().replace(",", "")
+                raw_saldo = cols[4].inner_text().strip()
                 current_saldo = int(float(raw_saldo))
 
                 keterangan = cols[2].inner_text().strip()
@@ -103,7 +98,7 @@ def run(playwright: Playwright) -> int:
 
                     pesan_menang = (
                         f"<b>{userid_site}</b>\n"
-                        f"<b>🏆 Kusam KANG IN</b>\n"
+                        f"<b>🏆 Kusam</b>\n"
                         f"🎯 Menang {format_rupiah(nilai_menang)}\n"
                         f"💰 Saldo: {format_rupiah(current_saldo)}\n"
                         f"⌚ {wib()}"
@@ -112,13 +107,13 @@ def run(playwright: Playwright) -> int:
                 else:
                     pesan_kalah = (
                         f"<b>{userid_site}</b>\n"
-                        f"<b>😢 Tleseb KANG IN</b>\n"
+                        f"<b>😢 Tleseb</b>\n"
                         f"💰 Saldo: {format_rupiah(current_saldo)}\n"
                         f"⌚ {wib()}"
                     )
                     kirim_telegram_log(pesan_kalah, parse_mode="HTML")
 
-                # ==== AUTO WD ====
+                # ==== AUTO WD LOGIC ====
                 try:
                     if os.path.exists("autowd.txt"):
                         autowd_config = baca_file("autowd.txt")
@@ -128,7 +123,7 @@ def run(playwright: Playwright) -> int:
                             wd_amount = wd_amount_str.strip()
 
                             if current_saldo >= batas_saldo:
-                                print(f"💳 Auto WD {wd_amount} karena saldo {current_saldo} >= {batas_saldo}")
+                                print(f"💳 Saldo {current_saldo} >= {batas_saldo}, melakukan auto withdraw {wd_amount}")
                                 page.get_by_role("link", name="Back to Menu").click()
                                 time.sleep(1)
                                 page.get_by_role("link", name="Withdraw").click()
