@@ -63,8 +63,7 @@ def run(playwright: Playwright) -> int:
         return 1
 
     site = sebelum_pipe[2]
-    userid_site = bagian[1].strip()
-
+    userid_site = setelah_pipe[2]
     try:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context(viewport={"width": 390, "height": 844})
