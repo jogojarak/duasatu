@@ -48,7 +48,7 @@ def wib():
     return datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%Y-%m-%d %H:%M WIB")
 
 def run(playwright: Playwright) -> int:
-    sites = baca_file_list("site.txt")
+    sites = baca_file_list("multi.txt")
     pw_env = os.getenv("pw")
     ada_error = False
 
@@ -98,7 +98,7 @@ def run(playwright: Playwright) -> int:
 
                     pesan_menang = (
                         f"<b>{userid_site}</b>\n"
-                        f"<b>🏆 Menang</b>\n"
+                        f"<b>🏆 Kusam</b>\n"
                         f"🎯 Menang {format_rupiah(nilai_menang)}\n"
                         f"💰 Saldo: {format_rupiah(current_saldo)}\n"
                         f"⌚ {wib()}"
@@ -107,7 +107,7 @@ def run(playwright: Playwright) -> int:
                 else:
                     pesan_kalah = (
                         f"<b>{userid_site}</b>\n"
-                        f"<b>😢 Tidak Menang</b>\n"
+                        f"<b>😢 Tleseb</b>\n"
                         f"💰 Saldo: {format_rupiah(current_saldo)}\n"
                         f"⌚ {wib()}"
                     )
