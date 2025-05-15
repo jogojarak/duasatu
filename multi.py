@@ -20,19 +20,6 @@ def baca_file(file_name: str) -> str:
     with open(file_name, 'r') as file:
         return file.read().strip()
 
-def baca_multi_config(files_csv: str) -> str:
-    semua_kombinasi = []
-    for nama_file in files_csv.split(','):
-        nama_file = nama_file.strip()
-        if not nama_file.endswith(".txt"):
-            nama_file += ".txt"
-        try:
-            konten = baca_file(nama_file)
-            semua_kombinasi.append(konten)
-        except FileNotFoundError:
-            print(f"⚠️ File tidak ditemukan: {nama_file}")
-    return '*'.join(semua_kombinasi)
-
 def kirim_telegram_log(status: str, pesan: str):
     print(pesan)
     if telegram_token and telegram_chat_id:
@@ -57,9 +44,9 @@ def parse_saldo(saldo_text: str) -> float:
     saldo_text = saldo_text.replace("Rp.", "").replace("Rp", "").strip().replace(",", "")
     return float(saldo_text)
 
-def run(playwright: Playwright, situs: str, userid: str, bet_raw: str, bet_raw2: str, config_csv: str):
+def run(playwright: Playwright, situs: str, userid: str, bet_raw: str, bet_raw2: str):
     try:
-        nomor_kombinasi = baca_multi_config(config_csv)
+        nomor_kombinasi = baca_file("config_png.txt")
         bet_kali = float(bet_raw)
         bet_kali2 = float(bet_raw2)
         jumlah_kombinasi = len(nomor_kombinasi.split('*'))
@@ -75,13 +62,7 @@ def run(playwright: Playwright, situs: str, userid: str, bet_raw: str, bet_raw2:
         page = context.new_page()
         page.goto(f"https://{situs}/#/index?category=lottery")
 
-        try:
-            close_button = page.get_by_role("img", name="close")
-            if close_button.is_visible():
-                close_button.click()
-        except:
-            pass
-
+        page.get_by_role("img", name="close").click()
         with page.expect_popup() as popup_info:
             page.get_by_role("heading", name="HOKI DRAW").click()
         page1 = popup_info.value
@@ -158,13 +139,16 @@ def main():
     bets = baca_file("multi.txt").splitlines()
     with sync_playwright() as playwright:
         for baris in bets:
-            if '|' not in baris or baris.strip().startswith("#"):
+            if '|' not in baris:
                 continue
+            if baris.strip().startswith("#"):
+                continue  # <-- Lewati baris komentar
             parts = baris.strip().split('|')
-            if len(parts) < 5:
+            if len(parts) != 4:
                 continue
-            situs, userid, bet_raw, bet_raw2, config_csv = parts
-            run(playwright, situs.strip(), userid.strip(), bet_raw.strip(), bet_raw2.strip(), config_csv.strip())
+            situs, userid, bet_raw, bet_raw2 = parts
+            run(playwright, situs.strip(), userid.strip(), bet_raw.strip(), bet_raw2.strip())
+
 
 if __name__ == "__main__":
     main()
