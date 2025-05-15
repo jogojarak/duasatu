@@ -1,4 +1,4 @@
-name: CEK SALDO
+name: run multi account
 
 on:
   workflow_dispatch:
@@ -35,9 +35,9 @@ jobs:
         pip install playwright requests python-dotenv pytz
         playwright install chromium
 
-    - name: Run script
+    - name: Jalankan Multi Script
       env:
         pw: ${{ secrets.PW }}
-        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN2 }}
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      run: python cekwd.py
+      run: python multi.py
